@@ -1,0 +1,219 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Inventory · Inventory Management System</title>
+<link rel="stylesheet"href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+ <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar__brand">
+      <span class="brand-mark"><span class="brand-mark__glyph"></span></span>
+      <span class="sidebar__brand-text">Inventory Manager<small>Manager Console</small></span>
+    </div>
+
+    <div class="sidebar__section-label">Menu</div>
+    <ul class="sidebar__nav">
+      <li><a class="sidebar__link" href={% url 'manager' %}> <span class="sidebar__icon icon-grid"></span><span>Dashboard</span></a></li>
+      <li><a class="sidebar__link" href={% url 'add_inventry'%}><span class="sidebar__icon icon-plus"></span><span>Add Inventory</span></a></li>
+      <li><a class="sidebar__link" href={% url 'view_inventry'%}><span class="sidebar__icon fa-solid fa-eye"></span><span>View Inventory</span></a></li>
+      <li><a class="sidebar__link" href={% url 'update_inventry'%}><span class="sidebar__icon fa-solid fa-pen-to-square"></span><span>Update Inventory</span></a></li>
+      <li><a class="sidebar__link" href={% url 'delete_inventry'%}><span class="sidebar__icon fa-solid fa-trash"></span>Delete Inventory</span></a></li>
+    </ul>
+
+    <div class="sidebar__logout">
+      <a class="sidebar__link" href={% url 'login'%}><span class="sidebar__icon icon-logout"></span><span>Logout</span></a>
+    </div>
+  </aside>
+
+  <header class="topbar">
+    <span class="topbar__title">Add Inventory</span>
+    <div class="topbar__right">
+      <div class="profile-chip">
+        <span class="profile-chip__text">
+          <span class="profile-chip__name">{{username}}</span>
+          <span class="profile-chip__role">Manager</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="breadcrumb">Inventory / <span>Add Inventory</span></div>
+    <div class="page-heading">
+      <div>
+        <h1>Add a new item</h1>
+        <p>Enter product details to add it to the catalogue. Fields marked * required must be filled.</p>
+      </div>
+    </div>
+
+
+    <form class="panel" method="POST" enctype="multipart/form-data" onsubmit="add_inventrybtn(event)">
+    
+      <div class="panel__header">
+        <div>
+          <h2>Product details</h2>
+          <p>Basic information used to identify this item</p>
+        </div>
+        <p>{{msg}}<p>
+      </div>
+      <div class="panel__body">
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="product-id">Product ID *<span class="hint"></span></label>
+            <input id="product-id" type="text" placeholder="Product Id" name="product_id "required>
+          </div>
+          <div class="form-field">
+            <label for="product-name">Product name *</label>
+            <input id="product-name" type="text" placeholder="e.g. Wireless Mouse" name="product_name" required>
+          </div>
+          <div class="form-field">
+            <label for="category">Category *</label>
+            <select id="category" name="category" required>
+              <option value="">Select category</option>
+              <option>Electronics</option>
+              <option>Furniture</option>
+              <option>Accessories</option>
+              <option>Home &amp; Office</option>
+              <option>Stationery</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="supplier">Supplier *</label>
+            <input id="supplier" type="text" placeholder="e.g. Nova Traders Pvt. Ltd." name="supplier" required>
+          </div>
+          <div class="form-field span-2">
+            <label for="description">Description</label>
+            <textarea id="description" placeholder="Short description of the product, materials, or specifications" name="description" ></textarea>
+          </div>
+          <div class="form-field span-2">
+            <label>Product image</label>
+            <div class="upload-well">
+               <input type="file" name="image" id="image">
+            </div>
+          </div>
+        </div>
+      </div>
+    {% comment %} </form> {% endcomment %}
+
+    {% comment %} <form class="panel" action="#" method="POST"> {% endcomment %}
+      <div class="panel__header">
+        <div>
+          <h2>Stock &amp; pricing</h2>
+          <p>Quantity, pricing and reorder settings</p>
+        </div>
+      </div>
+      <div class="panel__body">
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="quantity">Quantity *</label>
+            <input id="quantity" type="number" min="0" placeholder="0" name="qunatity" required>
+          </div>
+          <div class="form-field">
+            <label for="unit">Unit *</label>
+            <select id="unit" name="unit" required>
+              <option>Piece</option>
+              <option>Box</option>
+              <option>Kilogram</option>
+              <option>Litre</option>
+            </select>
+          </div>
+          <div class="form-field">  
+            <label for="price">Price per unit (₹) *</label>
+            <input id="price" type="number" min="0" step="0.01" placeholder="0.00" name="price_per_unit" required>
+          </div>
+          <div class="form-field">
+            <label for="warehouse">Warehouse location *</label>
+            <input id="warehouse" type="text" placeholder="e.g. Rack B-12, Jaipur Warehouse" name="wherehouse_location"  required>
+          </div>
+          <div class="form-field">
+            <label for="status">Initial status *</label>
+            <select id="status" name="intial_status" required>
+              <option>Available</option>
+              <option>Low Stock</option>
+              <option>Out of Stock</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="reset" class="btn btn-outline">Clear form</button>
+          <button type="submit" class="btn btn-primary">Save inventory item</button>
+        </div>
+      </div>
+    </form>
+  </main>
+</div>
+<script>
+     async function add_inventrybtn(event){
+            event.preventDefault();
+            const product_id=document.getElementById("product-id").value;
+            const product_name =document.getElementById("product-name").value;
+            const category= document.getElementById("category").value;
+            const supplier = document.getElementById("supplier").value;
+            const description=document.getElementById("description");
+            const image=document.getElementById("image");
+            const quantity=document.getElementById("quantity");
+            const unit=document.getElementById("unit");
+            const price=document.getElementById("price");
+            const warehouse=document.getElementById("warehouse");
+            const status=document.getElementById("status");
+          
+
+
+            const csrfToken = document.querySelector(
+            '[name="csrfmiddlewaretoken"]'
+             ).value;
+            
+            try {
+                const response = await fetch('/add_inventry/', {
+                method: "POST",  // Required to send signup data
+
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+
+                body: JSON.stringify({
+                    product_id: product_id,
+                    product_name: product_name,
+                    category: category,
+                    supplier: supplier,
+                    description :description,
+                    image:image,
+                    qunatity:quantity,
+                    unit:unit,
+                    price_per_unit:price,
+                    wherehouse_location: warehouse,
+                    intial_status:status
+
+
+
+                })
+            });
+
+                const data = await response.json();
+
+                console.log(data);
+
+                if (response.ok) {
+                    window.location.href = data.pageurl;
+                } else {
+                    console.log("response is not ok");
+                }
+            }
+
+            catch (error) {
+               console.log("try block have error")
+               console.error("Error:", error);
+            }
+
+        }
+
+    </script>
+</body>
+</html>
