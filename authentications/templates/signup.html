@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Design by foolishdeveloper.com -->
+    <title>Glassmorphism login Form Tutorial in html css</title>
+ 
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
+    <!--Stylesheet-->
+    <style media="screen">
+      *,
+*:before,
+*:after{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+body{
+    background-image:url("/static/images/consumer_bg.avif");
+    height: 100vh;
+    background-size: cover;
+    background-position: center;
+}
+.background{
+    width: 630px;
+    height: 520px;
+    position: absolute;
+    transform: translate(-50%,-50%);
+    left: 50%;
+    top: 50%;
+}
+
+form{
+    height: 520px;
+    width: 630px;
+    background-color: rgba(255,255,255,0.13);
+    position: absolute;
+    transform: translate(-50%,-50%);
+    top: 50%;
+    left: 50%;
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255,255,255,0.1);
+    box-shadow: 0 0 40px rgba(8,7,16,0.6);
+    padding: 50px 35px;
+}
+form *{
+    font-family: 'Poppins',sans-serif;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+    outline: none;
+    border: none;
+}
+form h3{
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 42px;
+    text-align: center;
+}
+
+label{
+    display: block;
+    margin-top: 30px;
+    font-size: 16px;
+    font-weight: 500;
+}
+input{
+    display: block;
+    height: 50px;
+    width: 100%;
+    background-color: black;
+    border-radius: 3px;
+    padding: 0 10px;
+    margin-top: 8px;
+    font-size: 14px;
+    font-weight: 300;
+}
+::placeholder{
+    color: #e5e5e5;
+}
+button{
+    margin-top: 50px;
+    width: 100%;
+    background-color: #080710;
+    color: white;
+    padding: 15px 0;
+    font-size: 18px;
+    font-weight: 600;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 17px;
+
+}
+.social{
+  margin-top: 30px;
+  display: flex;
+}
+.social div{
+  background: red;
+  width: 150px;
+  border-radius: 3px;
+  padding: 5px 10px 10px 5px;
+  background-color: rgba(255,255,255,0.27);
+  color: #eaf0fb;
+  text-align: center;
+}
+.social div:hover{
+  background-color: rgba(255,255,255,0.47);
+}
+.social .fb{
+  margin-left: 25px;
+}
+.social i{
+  margin-right: 4px;
+}
+.select{
+     display: block;
+    height: 50px;
+    width: 100%;
+    background-color: rgba(255,255,255,0.07);
+    border-radius: 3px;
+    padding: 0 10px;
+    margin-top: 8px;
+    font-size: 14px;
+    font-weight: 300;
+}
+.input_container{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.input_feild{
+    display: flex;
+    flex-direction: column;
+    width: 47%;
+}
+    </style>
+</head>
+<body>
+    <div class="background">
+    
+    </div>
+    <form  onsubmit="signupbtn(event)">
+         {% csrf_token %}
+         <h3>Signup Here </h3>
+         {% if error.cnf_password %}
+           <p>{{error.cnf_password.0}}</p>
+         {% endif %} 
+         <p id="error_msg"></p>
+        <div class="input_container">
+        <div class="input_feild">
+        <label for="username">UserName</label>
+        <input type="text" placeholder="Username" id="username" name="username">
+        </div>
+         <div class="input_feild">
+        <label for="Email">Email</label>
+        <input type="email" placeholder="Email" id="Email" name="email">
+        </div>
+        </div>
+        <div class="input_container">
+        <div class="input_feild">
+        <label for="password">Password</label>
+        <input type="password" placeholder="Password" id="password" name="password" required>
+        </div>
+        <div class="input_feild">
+        <label for="cnf_password">Confirm Password</label>
+        <input type="password" placeholder="Password" id="cnf_password" name="cnf_password" required>
+        </div>
+        </div>
+
+        <button type="submit">Register</button>
+        <a href="{% url 'login' %}">Login Here</a>
+    </form>
+    <script>
+     async function signupbtn(event){
+            event.preventDefault();
+            const username=document.getElementById("username").value;
+            const Email =document.getElementById("Email").value;
+            const password = document.getElementById("password").value;
+            const cnf_password = document.getElementById("cnf_password").value;
+            const error_msg=document.getElementById("error_msg");
+
+
+            const csrfToken = document.querySelector(
+            '[name="csrfmiddlewaretoken"]'
+             ).value;
+            
+            try {
+                const response = await fetch('', {
+                method: "POST",  // Required to send signup data
+
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+
+                body: JSON.stringify({
+                    username: username,
+                    email: Email,
+                    password: password,
+                    cnf_password: cnf_password
+                })
+            });
+
+                const data = await response.json();
+
+                console.log(data);
+
+                if (response.ok) {
+                    window.location.href = data.pageurl;
+                } else {
+                    console.log("response is not ok");
+                }
+            }
+
+            catch (error) {
+               console.log("try block have error")
+               console.error("Error:", error);
+            }
+
+        }
+
+    </script>
+
+</body>
+</html>

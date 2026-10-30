@@ -1,0 +1,176 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard · Inventory Management System</title>
+<link rel="stylesheet" href="{% static 'style.css' %}">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar__brand">
+      <span class="brand-mark"><span class="brand-mark__glyph"></span></span>
+      <span class="sidebar__brand-text">Inventory Manager<small>Manager Console</small></span>
+    </div>
+
+    <div class="sidebar__section-label">Menu</div>
+    <ul class="sidebar__nav">
+       <li><a class="sidebar__link" href={% url 'manager' %}> <span class="sidebar__icon icon-grid"></span><span>Dashboard</span></a></li>
+      <li><a class="sidebar__link" href={% url 'add_inventry'%}><span class="sidebar__icon icon-plus"></span><span>Add Inventory</span></a></li>
+      <li><a class="sidebar__link" href={% url 'view_inventry'%}><span class="sidebar__icon fa-solid fa-eye"></span><span>View Inventory</span></a></li>
+      <li><a class="sidebar__link" href={% url 'update_inventry'%}><span class="sidebar__icon fa-solid fa-pen-to-square"></span><span>Update Inventory</span></a></li>
+      <li><a class="sidebar__link" href={% url 'delete_inventry'%}><span class="sidebar__icon fa-solid fa-trash"></span>Delete Inventory</span></a></li>
+    </ul>
+
+    <div class="sidebar__logout">
+      <a class="sidebar__link" href={% url 'login'%}><span class="sidebar__icon icon-logout"></span><span>Logout</span></a>
+    </div>
+  </aside>
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <span class="topbar__title">Dashboard</span>
+    <div class="topbar__right">
+      {% comment %} <button class="icon-btn" aria-label="Notifications" type="button">
+        <span class="icon-bell"></span>
+        <span class="icon-btn__dot"></span>
+      </button> {% endcomment %}
+      <div class="profile-chip">
+        <span class="profile-chip__text">
+          <span class="profile-chip__name" id="username"></span>
+          <span class="profile-chip__role">Manager</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main content -->
+  <main class="main">
+    <div class="page-heading">
+      <div>
+        <h1 id="username">Welcome back, </h1>
+      </div>
+      <a href={% url 'add_inventry' %} class="btn btn-primary">
+        <span class="sidebar__icon icon-plus" style="width:12px;height:12px;"></span>
+        Add Inventory
+      </a>
+    </div>
+
+    <!-- Stats -->
+    <section class="stat-grid">
+      <div class="stat-card stat-card--total">
+        <div class="stat-card__top">
+          <span class="stat-card__label">Total Inventory</span>
+          <span class="stat-card__badge icon-dashboard"></span>
+        </div>
+        <div class="stat-card__value" id="rows"></div>
+        <div class="stat-card__meta">Across 5 categories</div>
+      </div>
+
+      <div class="stat-card stat-card--ok">
+        <div class="stat-card__top">
+          <span class="stat-card__label">Available Items</span>
+          <span class="stat-card__badge icon-box"></span>
+        </div>
+        <div class="stat-card__value" id="Available_item"></div>
+        <div class="stat-card__meta is-up" id="per_avai_stock"></div>
+      </div>
+
+      <div class="stat-card stat-card--low">
+        <div class="stat-card__top">
+          <span class="stat-card__label">Low Stock</span>
+          <span class="stat-card__badge icon-bell" style="border:none;"></span>
+        </div>
+        <div class="stat-card__value" id="low_stock_item"></div>
+      </div>
+
+      <div class="stat-card stat-card--out">
+        <div class="stat-card__top">
+          <span class="stat-card__label">Out of Stock</span>
+          <span class="stat-card__badge icon-trash"></span>
+        </div>
+        <div class="stat-card__value" id="out_of_stock"></div>
+        <div class="stat-card__meta is-down">Needs restocking</div>
+      </div>
+
+       <div class="stat-card stat-card--total">
+        <div class="stat-card__top">
+          <span class="stat-card__label">Number OF Units</span>
+          <span class="stat-card__badge icon-dashboard"></span>
+        </div>
+        <div class="stat-card__value" id="No_of_units"></div>
+       
+      </div>
+      <div class="stat-card stat-card--ok">
+        <div class="stat-card__top">
+          <span class="stat-card__label">Available locations</span>
+          <span class="stat-card__badge icon-box"></span>
+        </div>
+        <div class="stat-card__value" id="most_repeated_loc"></div>
+      </div>
+
+       <div class="stat-card stat-card--ok">
+        <div class="stat-card__top">
+          <span class="stat-card__label">Product with Maximum qunatity</span>
+          <span class="stat-card__badge icon-box"></span>
+        </div>
+        <div class="stat-card__value" id="most_quantity_product"></div>
+      </div>
+
+        <div class="stat-card stat-card--total">
+        <div class="stat-card__top">
+          <span class="stat-card__label">Product with Maximum Price Per Unit</span>
+          <span class="stat-card__badge icon-dashboard"></span>
+        </div>
+        <div class="stat-card__value" id="max_price_per_unit_product"></div>
+       
+      
+    
+    </section>
+
+    
+  </main>
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  fetch("/manager_api/", {
+        method: "GET",
+        credentials: "same-origin"
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("Request failed: " + response.status);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log(data); // Check API response in Console
+        document.getElementById("username").textContent = data.username;
+        document.getElementById("rows").textContent = data.rows;
+        document.getElementById("Available_item").textContent = data.Available_item;
+        document.getElementById("per_avai_stock").textContent = data.per_avai_stock;
+        document.getElementById("low_stock_item").textContent = data.low_stock_item;
+        document.getElementById("out_of_stock").textContent = data.out_of_stock;
+        document.getElementById("No_of_units").textContent = data.No_of_units;
+        document.getElementById("most_repeated_loc").textContent = data.most_repeated_loc;
+        document.getElementById("most_quantity_product").textContent = data.most_quantity_product;
+        document.getElementById("max_price_per_unit_product").textContent = data.max_price_per_unit_product;
+        // Redirect after processing the response
+    })
+    .catch(error => {
+        console.error("Error:", error);
+    });
+  
+})
+        
+</script>
+
+</body>
+</html>
+{% comment %} <span class="sidebar__icon icon-dashboard"></span> {% endcomment %}

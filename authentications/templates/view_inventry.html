@@ -1,0 +1,324 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>View Inventory · Inventory Management System</title>
+<link rel="stylesheet" href="{% static 'style.css' %}">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+</head>
+<body>
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="sidebar__brand">
+      <span class="brand-mark"><span class="brand-mark__glyph"></span></span>
+      <span class="sidebar__brand-text">Inventory Manager<small>Manager Console</small></span>
+    </div>
+
+    <div class="sidebar__section-label">Menu</div>
+    <ul class="sidebar__nav">
+       <li><a class="sidebar__link" href={% url 'manager' %}> <span class="sidebar__icon icon-grid"></span><span>Dashboard</span></a></li>
+      <li><a class="sidebar__link" href={% url 'add_inventry'%}><span class="sidebar__icon icon-plus"></span><span>Add Inventory</span></a></li>
+      <li><a class="sidebar__link" href={% url 'view_inventry'%}><span class="sidebar__icon fa-solid fa-eye"></span><span>View Inventory</span></a></li>
+      <li><a class="sidebar__link" href={% url 'update_inventry'%}><span class="sidebar__icon fa-solid fa-pen-to-square"></span><span>Update Inventory</span></a></li>
+      <li><a class="sidebar__link" href={% url 'delete_inventry'%}><span class="sidebar__icon fa-solid fa-trash"></span>Delete Inventory</span></a></li>
+    </ul>
+
+    <div class="sidebar__logout">
+      <a class="sidebar__link" href={% url 'login'%}><span class="sidebar__icon icon-logout"></span><span>Logout</span></a>
+    </div>
+  </aside>
+  <header class="topbar" style="width: 95%;">
+    <span class="topbar__title">View Inventory</span>
+    <div class="topbar__right">
+      <div class="profile-chip">
+        <span class="profile-chip__text">
+          <span class="profile-chip__name" id="username"></span>
+          <span class="profile-chip__role">Manager</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main class="main" style="width: 95%; height: 88vh;">
+    <div class="breadcrumb">Inventory / <span>View Inventory</span></div>
+    <div class="page-heading">
+      <div>
+        <h1>Full inventory</h1>
+        <p>1,250 items across 8 categories</p>
+      </div>
+      <a href={% url 'add_inventry' %} class="btn btn-primary">
+        <span class="sidebar__icon icon-plus" style="width:12px;height:12px;"></span>
+        Add Inventory
+      </a>
+    </div>
+
+    <section class="panel" style="overflow: auto;">
+      <div class="panel__header">
+        <div>
+          <h2>All items</h2>
+          <p>Filter by category or stock status</p>
+        </div>
+        <form class="filter-row" method="post">
+          {% csrf_token %}
+          <select class="select-field"  id="filter_category">
+            <option>All categories</option>
+            <option>Electronics</option>
+            <option>Furniture</option>
+            <option>Accessories</option>
+            <option>Home &amp; Office</option>
+          </select>
+          <select class="select-field" id="filter_status">   
+            <option>All statuses</option>
+            <option>Available</option>
+            <option>Low Stock</option>
+            <option>Out of Stock</option>
+          </select>
+             <button type="button" onclick="filterbtn(event)" class="btn btn-primary">Filter</button>
+        </form>
+      </div>
+
+      <div class="table-scroll" style="overflow: auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Product ID</th>
+              <th>Product Name</th>
+              <th>Category</th>
+              <th>supplier</th>
+              <th>Quantity</th>
+              <th>unit</th>
+              <th>Price_per_unit</th>
+              <th>wherehouse_location</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="product_table_body"> 
+             
+          </tbody>
+        </table>
+      </div>
+      </div>
+    </section>
+  </main>
+</div>
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+ <script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    fetch("/view_inventry_api/", {
+        method: "GET",
+        credentials: "same-origin"
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("Request failed: " + response.status);
+        }
+
+        return response.json();
+    })
+    .then(data => {
+        console.log("API response:", data);
+
+        // Get username from API response
+        const usernameElement = document.getElementById("username");
+
+        if (usernameElement) {
+            usernameElement.textContent = data.username || "";
+        }
+
+        // Get table body
+        const tableBody = document.getElementById("product_table_body");
+
+        if (!tableBody) {
+            console.error("Product table body not found!");
+            return;
+        }
+
+        // Clear existing rows
+        tableBody.innerHTML = "";
+
+        // Get products from API response
+        const products = data.data;
+
+        // Display products
+        products.forEach(product => {
+            const row = document.createElement("tr");
+
+           row.innerHTML = `
+                <td>${product.product_id ?? ""}</td>
+                <td>${product.product_name ?? ""}</td>
+                <td>${product.category ?? ""}</td>
+                <td>${product.supplier ?? ""}</td>
+                <td>${product.qunatity ?? ""}</td>
+                <td>${product.unit ?? ""}</td>
+                <td>${product.price_per_unit ?? ""}</td>
+                <td>${product.wherehouse_location ?? ""}</td>
+                <td>${product.intial_status ?? ""}</td>
+                {% csrf_token %}
+                <td>
+                 
+                    <button
+                        type="button"
+                        onclick="deleteProduct(event, '${product.product_id}')" class="btn btn-primary">
+                        Delete
+                    </button>
+                </td>
+                 `;
+
+            tableBody.appendChild(row);
+        });
+
+        console.log("Products loaded successfully");
+    })
+    .catch(error => {
+        console.error("Error fetching inventory:", error);
+    });
+
+});
+async function filterbtn(event){
+      console.log("indside filter function")
+      event.preventDefault();
+      const filter_category=document.getElementById("filter_category").value;
+      const filter_status=document.getElementById("filter_status").value;
+       const csrfToken = document.querySelector(
+            '[name="csrfmiddlewaretoken"]'
+        ).value;
+
+        try {
+            const response = await fetch("/view_inventry_api/", {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+
+                body: JSON.stringify({
+                    filter_category: filter_category,
+                    filter_status: filter_status,
+                })
+            });
+
+            const data = await response.json();
+
+            console.log(data);
+
+            if (response.ok) {
+              const tableBody =
+                document.getElementById("product_table_body");
+
+            tableBody.innerHTML = "";
+            products=data.data
+
+            products.forEach(product => {
+                const row = document.createElement("tr");
+
+                row.innerHTML = `
+                    <td>${product.product_id}</td>
+                    <td>${product.product_name}</td>
+                    <td>${product.category}</td>
+                    <td>${product.supplier}</td>
+                    <td>${product.qunatity}</td>
+                    <td>${product.unit}</td>
+                    <td>${product.price_per_unit}</td>
+                    <td>${product.wherehouse_location}</td>
+                    <td>${product.intial_status}</td>
+                    <td>
+                        <button
+                            type="button"
+                            onclick="deleteProduct(event,'${product.product_id}')" class="btn btn-primary">
+                            Delete
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+                
+                console.log("filter data load successful");
+          
+            } 
+
+              
+            }     
+        catch (error) {
+            errormsg.textContent =
+                "Something went wrong. Please try again.";
+
+            console.error("Error:", error);
+        }
+      } 
+async function deleteProduct(event, product_id){
+   const csrfToken = document.querySelector(
+            '[name="csrfmiddlewaretoken"]'
+        ).value;
+   event.preventDefault();
+    try {
+            const response = await fetch("/view_inventry_api/", {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({
+                    product_id:product_id
+                })
+            });
+            console.log("Response status:", response.status);
+             const data = await response.json();
+             console.log(data)
+
+            console.log(data);
+
+            if (response.ok) {
+              const tableBody =
+                document.getElementById("product_table_body");
+
+            tableBody.innerHTML = "";
+            products=data.data
+
+            products.forEach(product => {
+                const row = document.createElement("tr");
+
+                 row.innerHTML = `
+                    <td>${product.product_id}</td>
+                    <td>${product.product_name}</td>
+                    <td>${product.category}</td>
+                    <td>${product.supplier}</td>
+                    <td>${product.qunatity}</td>
+                    <td>${product.unit}</td>
+                    <td>${product.price_per_unit}</td>
+                    <td>${product.wherehouse_location}</td>
+                    <td>${product.intial_status}</td>
+                    <td>
+                        <button
+                            type="button"
+                            onclick="deleteProduct(event,'${product.product_id}')" class="btn btn-primary">
+                            Delete
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+                
+                console.log("filter data load successful");
+          
+            } 
+
+          }
+    catch(error){
+      console.log("try block have error");
+      console.error("Actual Error",error);
+    }
+   
+}
+ </script>
+</body>
+</html>

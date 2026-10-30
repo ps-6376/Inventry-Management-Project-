@@ -1,0 +1,24 @@
+<tr>
+                  <td data-label="Product ID" class="cell-id"></td>
+                  <td data-label="Product Name"><div class="cell-product"><span class="product-thumb"></span><span class="product-name"></span></div></td>
+                  <td data-label="Category"></td>
+                  <td data-label="supplier"></td>
+                  <td data-label="Quantity" class="cell-num"></td>
+                  <td data-label="unit" class="cell-num"></td>
+                  <td data-label="price_per_unit" class="cell-num"></td>
+                  <td data-label="wherehouse_location" class="cell-num"></td>
+                  <td data-label="Status"><span class="status-pill"><span class="status-dot ok"></span></span></td>
+                  <td data-label="Action">
+                    <a class="icon-link" href="update_inventry.html" aria-label="Edit"><span class="sidebar__icon icon-pencil"></span></a>
+                     
+                    <form method="POST">
+                      {% csrf_token %}
+                       <input type="hidden" name="product_id" value="{{product.product_id}}">
+                      
+                      <button type="submit" class="btn btn-danger">Delete</button>
+                  {% comment %} <a class="icon-link danger" href="delete-inventory.html" aria-label="Delete"><span class="sidebar__icon icon-trash"></span></a> {% endcomment %}
+                    </form>
+                  </td>
+
+            </tr>
+         

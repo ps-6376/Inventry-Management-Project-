@@ -1,0 +1,122 @@
+/* =====================================================================
+   Delete Inventory page fixes
+   Paste at the END of style.css. Scoped with :has(#deletebtn) so other
+   pages that share style.css are not affected.
+   ===================================================================== */
+
+/* ---------- 1. Lock the page to the viewport (no page scroll) ---------- */
+
+html:has(#deletebtn),
+body:has(#deletebtn) {
+  height: 100%;
+  overflow: hidden;
+}
+
+.app-shell:has(#deletebtn) {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  grid-template-rows: var(--header-h) minmax(0, 1fr);
+}
+
+.app-shell:has(#deletebtn) .sidebar { height: 100%; }
+
+.app-shell:has(#deletebtn) .main {
+  height: auto !important;          /* overrides inline style="height: 88vh" */
+  max-width: none;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-shell:has(#deletebtn) .main > * { flex-shrink: 0; }
+
+/* the panel takes the remaining height instead of growing the page */
+.app-shell:has(#deletebtn) .main > .panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+}
+
+.app-shell:has(#deletebtn) .panel__header { flex: none; }
+
+.app-shell:has(#deletebtn) .panel__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-shell:has(#deletebtn) .panel__body > form {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* item list: never scrolls sideways; scrolls up/down only inside its own box */
+.app-shell:has(#deletebtn) #form {
+  flex: 1 1 auto;
+  min-height: 120px;
+  overflow-x: hidden !important;    /* overrides inline overflow-x: auto */
+  overflow-y: auto !important;
+  scrollbar-width: thin;
+}
+
+.app-shell:has(#deletebtn) .form-actions { flex: none; }
+
+/* ---------- 2. Keep rows on one line, no sideways overflow ---------- */
+
+.app-shell:has(#deletebtn) .confirm-row { flex-wrap: nowrap; }
+
+.app-shell:has(#deletebtn) .confirm-row__info {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.app-shell:has(#deletebtn) .confirm-row__text { min-width: 0; }
+
+.app-shell:has(#deletebtn) .confirm-row__text .product-name,
+.app-shell:has(#deletebtn) .confirm-row__text .product-sub {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- 3. "Available" text: .status-dot is a 7px circle, so the text
+                 spilled out of it. Turn it into a proper pill. ---------- */
+
+.app-shell:has(#deletebtn) .confirm-row .status-pill { flex-shrink: 0; }
+
+.app-shell:has(#deletebtn) .confirm-row .status-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: auto;
+  height: auto;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--ink-700);
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+
+.app-shell:has(#deletebtn) .confirm-row .status-dot.ok::before  { background: var(--green-700); }
+.app-shell:has(#deletebtn) .confirm-row .status-dot.low::before { background: var(--amber-700); }
+
+/* ---------- 4. Short screens: tighten spacing so everything fits ---------- */
+
+@media (max-height: 760px) {
+  .app-shell:has(#deletebtn) .page-heading { margin-bottom: 12px; }
+  .app-shell:has(#deletebtn) .notice { margin-bottom: 12px; padding: 8px 14px; }
+  .app-shell:has(#deletebtn) .panel__header { padding: 12px 16px; }
+  .app-shell:has(#deletebtn) .panel__body { padding: 14px 16px; }
+}

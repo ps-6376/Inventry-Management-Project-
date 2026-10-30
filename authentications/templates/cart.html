@@ -1,0 +1,238 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Shopping Cart | Inventory Management System</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'cartstyle.css' %}">
+</head>
+<body class="cart-page">
+
+    <div class="cart-layout">
+
+        <!-- ============ Sidebar ============ -->
+        <aside class="cart-sidebar">
+            <a href="#dashboard" class="cart-brand">
+                <i class="fa-solid fa-warehouse"></i>
+                <span class="cart-brand__text">Inventory</span>
+            </a>
+
+            <nav class="cart-nav" aria-label="Main navigation">
+                <ul class="cart-nav__list">
+                    <li>
+                        <a href={% url 'consumer' %}  class="cart-nav__link">
+                            <i class="fa-solid fa-gauge-high"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href={% url 'cartpage' %} class="cart-nav__link cart-nav__link--active" aria-current="page">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                            <span>Add Cart</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href={% url 'order' %} class="cart-nav__link">
+                            <i class="fa-solid fa-box"></i>
+                            <span>Orders</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href={% url 'profile' %} class="cart-nav__link">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            <span>Return</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- ============ Main content ============ -->
+        <main class="cart-main">
+
+            <header class="cart-header">
+                <div>
+                    <h1 class="cart-header__title">My Shopping Cart</h1>
+                    <p class="cart-header__subtitle">Review your selected products before placing your order.</p>
+                </div>
+                <span class="cart-header__count">
+                    <i class="fa-solid fa-basket-shopping"></i>
+                    {{ cart_items|length }} Item{{ cart_items|length|pluralize }} in Cart
+                </span>
+            </header>
+
+            <section class="cart-items" aria-label="Cart items">
+
+                <!-- Column labels (desktop / tablet only) -->
+                <div class="cart-columns" aria-hidden="true"  style="grid-template-columns:minmax(0, 3fr) 1fr 1fr 1fr 260px;">
+                    <span class="cart-columns__product">Product</span>
+                    <span>Price</span>
+                    <span>Quantity</span>
+                    <span>Unit</span>
+                    <span style="width: fit-content;">total price</span>
+
+                    <span class="cart-columns__action" style="width: fit-content;">Action</span>
+                </div>
+                {% for cart_item in cart_items  %}
+                  <article class="cart-row" style="grid-template-columns:minmax(0, 3fr) 1fr 1fr 1fr 260px;">
+                    <div class="cart-row__product" style="width:240px">
+                        <div class="cart-row__image">
+                            {% if cart_item.image %}
+                                <img src="{{cart_item.image.url }}" alt="{{ cart_item.product_name }}">
+                            {% else %}
+                                <i class="fa-regular fa-image" aria-label="No image available"></i>
+                            {% endif %}
+                        </div>
+                        <h2 class="cart-row__name">{{ cart_item.product_name }}</h2>
+                    </div>
+
+                    <div class="cart-row__cell cart-row__price" data-label="Price" style="width:fit-content;">
+                        ₹{{ cart_item.price_per_unit|floatformat:2 }}
+                    </div>
+
+                    <div class="cart-row__cell" data-label="Quantity" style="width:fit-content;">
+                        <span class="cart-row__qty">{{ cart_item.qunatity }}</span>
+                    </div>
+
+                    <div class="cart-row__cell cart-row__unit" data-label="Unit" style="width:fit-content;">
+                        {{ cart_item.unit }}
+                    </div>
+                     {% for total_price in total_prices %}
+                        
+                          {% if forloop.parentloop.counter0 == forloop.counter0 %}
+                             <div class="cart-row__cell cart-row__unit" data-label="total_price" style="width:fit-content;">
+                               {{total_price}}
+                             </div>
+
+                          {% endif %}
+
+                     {% endfor %}
+
+                    <div class="cart-row__action" style="width:fit-content;">
+                        <button type="button" class="cart-btn-remove" >
+                            <i class="fa-solid fa-trash-can"></i>
+                            Remove
+                        </button>
+                    </div>
+
+                </article> 
+                
+                {% empty %}
+                <div class="cart-empty">
+                    <i class="fa-solid fa-cart-shopping cart-empty__icon"></i>
+                    <h2 class="cart-empty__title">Your cart is empty</h2>
+                    <p class="cart-empty__text">Add products from your inventory to start an order.</p>
+                    <a href="#dashboard" class="cart-btn-continue">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        Continue Shopping
+                    </a>
+                </div>
+               {% endfor %}
+
+            </section>
+
+            {% if cart_items %}
+            <!-- ============ Order summary ============ -->
+            <section class="cart-summary-wrap" aria-label="Order summary">
+                <div class="cart-summary">
+                    <h2 class="cart-summary__title">Order Summary</h2>
+
+                    <dl class="cart-summary__list">
+                        {% comment %} <div class="cart-summary__line">
+                            <dt>Total items</dt>
+                            <dd>{{len_of_cart|default:len_of_cart|length }}</dd>
+                        </div> {% endcomment %}
+                        <div class="cart-summary__line">
+                            <dt>Subtotal</dt>
+                            <dd>₹{{ subtotal|default:"0.00" }}</dd>
+                        </div>
+                        <div class="cart-summary__line">
+                            <dt>Delivery charges</dt>
+                            <dd>₹{{ delivery_charges|default:"50.00" }}</dd>
+                        </div>
+                        <div class="cart-summary__line cart-summary__line--total">
+                            <dt>Total amount</dt>
+                            <dd>₹{{ total_amount|default:"0.00" }}</dd>
+                        </div>
+                    </dl>
+
+                    <button type="button" class="cart-btn-order" onclick="getOrder()">
+                        <i class="fa-solid fa-circle-check"></i>
+                        Place Order
+                    </button>
+                </div>
+            </section>
+            {% endif %}
+
+        </main>
+    </div>
+
+    <script>
+
+    {% comment %} get response  {% endcomment %}
+    {% comment %} response=fetch("/cart/",{
+        method:"GET",
+            
+    })
+    try:
+        if response.ok{
+
+            const data= await response.json();
+            console.log(data)
+            
+        }
+        else:
+           throw new Error("Failed to fetch cart data");
+    catch(error){
+        console.log(error)
+    } {% endcomment %}
+
+    
+    {% comment %} remove button js {% endcomment %}
+    
+    document.querySelectorAll(".cart-btn-remove").forEach(function (button) {
+    button.addEventListener("click", function () {
+
+        // Find the article containing the clicked button
+        const cartRow = this.closest(".cart-row");
+
+        // Remove the entire article
+        if (cartRow) {
+            cartRow.remove();
+        }
+
+        });
+     });
+    {% comment %} order button js {% endcomment %}
+     async function getOrder() {
+        try {
+                const response = await fetch("/cart/",          
+                    {
+                        method: "POST",
+                        headers: {
+                        "Content-Type": "application/json",
+                },
+                    body: JSON.stringify({
+                     "msg":"post request in sended"
+            })
+            });
+                if (response.ok) {
+                     window.location.href = "/orders/";
+            }   else {
+                     window.location.href = "/cart/";
+            }
+            }
+            catch (error) {
+                console.error("Error:", error);
+            }
+    }
+    </script>
+
+</body>
+</html>

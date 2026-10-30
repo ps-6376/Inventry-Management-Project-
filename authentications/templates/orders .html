@@ -1,0 +1,200 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders | StockPilot</title>
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Your stylesheet -->
+    <link rel="stylesheet" href="{% static 'orderstyle.css' %}">
+</head>
+<body>
+<div class="layout">
+
+    <!-- ============ SIDEBAR ============ -->
+    <aside class="sidebar">
+        <a href="#" class="brand">
+            <span class="brand-icon"><i class="fa-solid fa-boxes-stacked"></i></span>
+            <span class="brand-name">StockPilot</span>
+        </a>
+
+        <nav class="nav" aria-label="Main navigation">
+            <ul class="nav-list">
+                <li>
+                    <a href="#" class="nav-link">
+                        <i class="fa-solid fa-gauge-high"></i><span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link">
+                        <i class="fa-solid fa-cart-plus"></i><span>Add Cart</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link active" aria-current="page">
+                        <i class="fa-solid fa-receipt"></i><span>Orders</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link">
+                        <i class="fa-solid fa-user"></i><span>Profile</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <a href="#" class="nav-link logout">
+            <i class="fa-solid fa-right-from-bracket"></i><span>Logout</span>
+        </a>
+    </aside>
+
+    <!-- ============ MAIN CONTENT ============ -->
+    <main class="main">
+
+        <header class="page-header">
+            <div>
+                <h1>My Orders</h1>
+                <p class="subtitle">Track, manage, and review your orders.</p>
+            </div>
+            <div class="user-chip">
+                <img class="avatar" src="https://placehold.co/80x80/4f46e5/ffffff?text={{ request.user.username|slice:':1'|upper }}" alt="">
+                <span class="username">{{ request.user.username }}</span>
+            </div>
+        </header>
+
+        <!-- Summary cards -->
+        <section class="summary" aria-label="Order summary">
+            <article class="stat-card">
+                <span class="stat-icon stat-total"><i class="fa-solid fa-box"></i></span>
+                <div>
+                    <p class="stat-label">Total Orders</p>
+                    <p class="stat-count">{{ total_orders }}</p>
+                </div>
+            </article>
+            <article class="stat-card">
+                <span class="stat-icon stat-active"><i class="fa-solid fa-truck-fast"></i></span>
+                <div>
+                    <p class="stat-label">Active Orders</p>
+                    <p class="stat-count">{{ active_orders }}</p>
+                </div>
+            </article>
+            <article class="stat-card">
+                <span class="stat-icon stat-delivered"><i class="fa-solid fa-circle-check"></i></span>
+                <div>
+                    <p class="stat-label">Delivered Orders</p>
+                    <p class="stat-count">{{ delivered_orders }}</p>
+                </div>
+            </article>
+        </section>
+
+        <!-- Order list -->
+        <section class="orders" aria-label="Your orders">
+            {% for order in orders %}
+            <article class="order-card card-{{ order.status|lower }}">
+
+                <!-- Order header -->
+                <header class="order-header">
+                    <div class="order-meta">
+                        <h2 class="order-id">{{ order.order_id }}</h2>
+                        <p class="order-date"><i class="fa-regular fa-calendar"></i> Placed on {{ order.order_date }}</p>
+                    </div>
+                    <!-- status-pending / status-processing / status-shipped / status-delivered / status-cancelled -->
+                    <span class="badge status-{{ order.status|lower }}">{{ order.status }}</span>
+                </header>
+
+                <div class="order-body">
+
+                    <!-- Products -->
+                    <ul class="items">
+                        {% for item in order.items.all %}
+                        <li class="item">
+                            {% if item.image %}
+                                <img class="item-image" src="{{ item.image.url }}" alt="{{ item.product_name }}">
+                            {% else %}
+                                <img class="item-image" src="https://placehold.co/200x200/e0e7ff/4338ca?text=No+Image" alt="{{ item.product_name }}">
+                            {% endif %}
+
+                            <div class="item-info">
+                                <h3 class="item-name">{{ item.product_name }}</h3>
+                                <dl class="item-details">
+                                    <div><dt>Quantity</dt><dd>{{ item.quantity }}</dd></div>
+                                    <div><dt>Unit</dt><dd>{{ item.unit }}</dd></div>
+                                    <div><dt>Price per unit</dt><dd>₹{{ item.price_per_unit }}</dd></div>
+                                </dl>
+                            </div>
+
+                            <p class="item-subtotal">
+                                <span>Subtotal</span>
+                                ₹{{ item.subtotal }}
+                            </p>
+                        </li>
+                        {% endfor %}
+                    </ul>
+
+                    <!-- Price summary -->
+                    <aside class="summary-box">
+                        <h3>Price summary</h3>
+                        <dl class="price-rows">
+                            <div><dt>Subtotal</dt><dd>₹{{ order.subtotal }}</dd></div>
+                            <div><dt>Delivery Charges</dt><dd>₹{{ order.delivery_charges }}</dd></div>
+                            <div class="total"><dt>Total Amount</dt><dd>₹{{ order.total_amount }}</dd></div>
+                        </dl>
+                    </aside>
+                </div>
+
+                <!-- Actions (UI only - no real functionality) -->
+                <footer class="order-footer">
+                    {% if order.status == "Pending" or order.status == "Processing" %}
+                        <button type="button" class="btn btn-cancel">
+                            <i class="fa-solid fa-xmark"></i> Cancel Order
+                        </button>
+                    {% elif order.status == "Delivered" %}
+                        <button type="button" class="btn btn-return">
+                            <i class="fa-solid fa-rotate-left"></i> Return Order
+                        </button>
+                    {% elif order.status == "Cancelled" %}
+                        <p class="cancel-note"><i class="fa-solid fa-circle-info"></i> This order was cancelled.</p>
+                    {% elif order.status == "Shipped" %}
+                        <p class="ship-note"><i class="fa-solid fa-truck"></i> Your order is on its way.</p>
+                    {% endif %}
+                </footer>
+            </article>
+            {% empty %}
+            <div class="empty">
+                <i class="fa-solid fa-box-open"></i>
+                <h2>No orders yet</h2>
+                <p>Orders you place will show up here.</p>
+            </div>
+            {% endfor %}
+        </section>
+    </main>
+</div>
+<script> 
+    {% comment %} try:
+        response= fetch("/orders/",{
+            method:"GET"
+
+        })
+       if response.ok{
+          const data=response.json();
+       }
+       else{
+          
+       }
+    catch(error){
+        console.log(error)
+    } {% endcomment %}
+      
+</script> 
+    
+</body>
+</html>

@@ -1,0 +1,410 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Consumer Dashboard | Inventory Management</title>
+
+  <!-- Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome icons (CDN) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  <!-- Dashboard stylesheet (Django static) -->
+  <link rel="stylesheet" href="{% static 'consumer_dashboard.css' %}">
+</head>
+
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-top">
+
+        <!-- Logo + application name -->
+        <a class="brand" href="#">
+          {# Swap the icon for <img src="{% static 'images/logo.png' %}" alt=""> when you have a logo #}
+          <span class="brand-mark" aria-hidden="true"><i class="fa-solid fa-boxes-stacked"></i></span>
+          <span class="brand-text">
+            <span class="brand-name">Inventory Management</span>
+            <span class="brand-sub">Shop portal</span>
+          </span>
+        </a>
+
+        <!-- Consumer profile -->
+        <div class="profile-card">
+          <span class="profile-avatar" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+          <div class="profile-info">
+            <p class="profile-name">{{ username|default:"consumer_user" }}</p>
+            <p class="profile-role">Consumer</p>
+          </div>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="Main navigation">
+        <ul class="nav-list">
+          <li><a class="nav-link is-active" href={% url 'consumer' %} aria-current="page"><i class="fa-solid fa-gauge-high" aria-hidden="true"></i><span>Dashboard</span></a></li>
+          {% comment %} <li><a class="nav-link" href={% url 'consumer' %}><i class="fa-solid fa-store" aria-hidden="true"></i><span>Browse Products</span></a></li> {% endcomment %}
+          <li><a class="nav-link" href={% url 'cartpage' %}><i class="fa-solid fa-cart-shopping" aria-hidden="true"></i><span>My Cart</span></a></li>
+          <li><a class="nav-link" href={% url 'order' %}><i class="fa-solid fa-truck-fast" aria-hidden="true"></i><span>My Orders</span></a></li>
+          {% comment %} <li><a class="nav-link" href={% url 'consumer' %}><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i><span>Order History</span></a></li> {% endcomment %}
+          {% comment %} <li><a class="nav-link" href={% url 'consumer' %}><i class="fa-solid fa-arrow-rotate-left" aria-hidden="true"></i><span>Returned Products</span></a></li> {% endcomment %}
+          <li><a class="nav-link" href={% url 'profile' %}><i class="fa-solid fa-user-gear" aria-hidden="true"></i><span>My Profile</span></a></li>
+          <li class="nav-logout"><a class="nav-link" href={% url 'login' %}><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i><span>Logout</span></a></li>
+        </ul>
+      </nav>
+    </aside>
+
+
+    <!-- =====================================================
+         B. MAIN CONTENT AREA
+         ===================================================== -->
+    <div class="main">
+
+      <!-- Top header -->
+      <header class="topbar">
+        <div class="topbar-text">
+          <h1>Welcome back, {{ username|default:"Consumer" }}!</h1>
+          <p>Discover products and manage your shopping.</p>
+        </div>
+
+        <div class="topbar-actions">
+          <a class="icon-btn" href="#" aria-label="Shopping cart, 3 items">
+            <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
+            <span class="badge-count" aria-hidden="true">3</span>
+          </a>
+          <a class="icon-btn" href="#" aria-label="Notifications">
+            <i class="fa-regular fa-bell" aria-hidden="true"></i>
+            <span class="badge-dot" aria-hidden="true"></span>
+          </a>
+          <a class="avatar" href="#" aria-label="My profile">
+            <i class="fa-solid fa-user" aria-hidden="true"></i>
+          </a>
+        </div>
+      </header>
+
+      <main class="content">
+
+        <!-- Summary cards (sample numbers: replace with context variables) -->
+        <section class="summary" aria-label="Account summary">
+          <article class="stat stat--indigo">
+            <span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-box-open"></i></span>
+            <div>
+              <p class="stat-title">Available Products</p>
+              <p class="stat-value">{{total_product}}</p>
+            </div>
+          </article>
+
+          <article class="stat stat--amber">
+            <span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-cart-shopping"></i></span>
+            <div>
+              <p class="stat-title">Products in Cart</p>
+              <p class="stat-value">0</p>
+            </div>
+          </article>
+
+          <article class="stat stat--sky">
+            <span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-truck-fast"></i></span>
+            <div>
+              <p class="stat-title">Active Orders</p>
+              <p class="stat-value">0</p>
+            </div>
+          </article>
+
+          <article class="stat stat--emerald">
+            <span class="stat-icon" aria-hidden="true"><i class="fa-solid fa-receipt"></i></span>
+            <div>
+              <p class="stat-title">Total Orders</p>
+              <p class="stat-value">0</p>
+            </div>
+          </article>
+        </section>
+
+
+        <!-- =================================================
+             C. SEARCH, FILTERS AND PRODUCT GRID
+             The form below is visual only (no JavaScript, no action).
+             Wire it to your DRF endpoint or a Django view later.
+             ================================================= -->
+        <section class="explore" aria-labelledby="explore-title">
+
+          <form class="explore-form" method="POST" role="search" onsubmit="addcartbtn(event)">
+
+            <div class="explore-head">
+              <h2 id="explore-title">Explore Products</h2>
+
+              <!-- Filter button + panel (native <details>, no JavaScript) -->
+              <details class="filter-menu">
+                <summary class="filter-btn">
+                  <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+                  <span>Filters</span>
+                  <i class="fa-solid fa-chevron-down chevron" aria-hidden="true"></i>
+                </summary>
+
+                <div class="filter-panel">
+                  <div class="field field--full">
+                    <label for="filter-name">Product Name</label>
+                    <input type="text" id="filter-name" name="product_name" placeholder="e.g. Wireless Mouse">
+                  </div>
+
+                  <div class="field field--full">
+                    <label for="filter-category">Category</label>
+                    <select id="filter-category" name="category">
+                      <option value="">All categories</option>
+                      <option value="electronics">Electronics</option>
+                      <option value="clothing">Clothing</option>
+                      <option value="grocery">Grocery</option>
+                      <option value="furniture">Furniture</option>
+                      <option value="accessories">Accessories</option>
+                    </select>
+                  </div>
+
+                  <div class="field">
+                    <label for="filter-min">Minimum price (₹)</label>
+                    <input type="number" id="filter-min" name="min_price" min="0" step="1" placeholder="0">
+                  </div>
+                  <div class="field">
+                    <label for="filter-max">Maximum price (₹)</label>
+                    <input type="number" id="filter-max" name="max_price" min="0" step="1" placeholder="10000">
+                  </div>
+
+                  <div class="filter-actions">
+                    <a class="btn btn--ghost" href="#">Clear filters</a>
+                    <button type="submit" class="btn btn--primary">Apply filters</button>
+                  </div>
+                </div>
+              </details>
+            </div>
+
+            <!-- Search + sort toolbar -->
+            <div class="toolbar">
+              <div class="search">
+                <p id="result" style="color:red"></p>
+                <label class="sr-only" for="search-input">Search products by name</label>
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                <input type="search" id="search_input" name="q" placeholder="Search products by name...">
+              </div>
+
+              <div class="sort">
+                <label class="sr-only" for="sort-select">Sort products</label>
+                <select id="sort-select" name="sort">
+                  <option value="">Sort by</option>
+                  <option value="price_asc">Price: Low to High</option>
+                  <option value="price_desc">Price: High to Low</option>
+                  <option value="name_asc">Name: A–Z</option>
+                </select>
+              </div>
+            </div>
+          </form>
+
+
+          <!-- Product grid -->
+          <div class="product-grid" id="product_container">
+
+            {% for product in all_products %}
+            <!-- Live product card (Django loop) -->
+            <article class="product-card"  style="height: 100%;">
+              <div class="product-media" style="height: 39%;">
+                {% if product.image %}
+                  <img src="{{ product.image.url}}" alt="{{product.product_name}}" loading="lazy" >
+                {% else %}
+                  <span class="product-media-fallback" aria-hidden="true"><i class="fa-regular fa-image"></i></span>
+                {% endif %}
+
+                {% if product.qunatity == 0 %}
+                  <span class="badge badge--out">Out of Stock</span>
+                {% elif product.qunatity <= 10 %}
+                  <span class="badge badge--low">Low Stock</span>
+                {% else %}
+                  <span class="badge badge--in">In Stock</span>
+                {% endif %}
+              </div>
+
+              <div class="product-body">
+                {# If category is a ForeignKey, use product.category.name instead #}
+                <p class="product_id" style="display:none;">{{product.product_id}}</p> 
+                <p class="product-category">{{ product.category}}</p>
+                <h3 class="product-name">{{ product.product_name }}</h3>
+                <p class="product-stock"><i class="fa-solid fa-warehouse" aria-hidden="true"></i> {{ product.qunatity }} units available</p>
+
+                <div class="product-foot">
+                  <p class="product-price">₹{{ product.price_per_unit }}</p>
+                  <button type="submit" class="btn btn--primary btn--block add-cart-btn" id="button" 
+                      data-id="{{ product.product_id }}"
+                      {% comment %} data-name="{{ product.product_name }}"
+                      data-price="{{ product.price_per_unit }}"
+                      data-quantity="{{ product.qunatity }}"
+                      data-unit="{{ product.unit }}"
+                      data-category="{{ product.category }}"
+                      data-image="{% if product.image %}{{ product.image.url }}{% endif %}" {% endcomment %} 
+                      {% if product.qunatity == 0 %}disabled{% endif %}>
+                    <i class="fa-solid fa-cart-plus" aria-hidden="true"></i> Add to Cart
+                  </button>
+                </div>
+              </div>
+            </article>
+            {% endfor%}
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+  <script>
+    {% comment %} const searchinput=document.getElementById("search_input");
+    const result=document.getElementById("result");
+    const product_continer=document.getElementById("product_container");
+    searchinput.addEventListener("keydown", async function(event){
+      if(event.key==="Enter"){
+          const searchvalue = searchinput.value.trim();
+          console.log("Search value:", searchvalue);
+          if (!searchvalue) {
+            result.textContent = "Please enter a product name";
+            return;
+        }
+        try{
+            const response=await fetch('/consumerdeshboard/',{
+               method: "POST",
+               headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": document.querySelector(
+                        "[name=csrfmiddlewaretoken]"
+                    ).value
+                },
+               body: JSON.stringify({
+                    searchvalue: searchvalue
+                })
+
+            });
+            const data=await response.json();
+            console.log(data);
+            if (response.ok){
+               product_continer.innerHTML = "";
+               data.products.forEach(function(product){
+                    product_continer.innerHTML+=
+            <article class="product-card" style="height: 100%;">
+
+              <div class="product-media" style="height: 39%;">
+
+                  ${
+                      product.image
+                      ? `<img src="${product.image}"
+                              alt="${product.product_name}"
+                              loading="lazy">`
+                      : `<span class="product-media-fallback"
+                                aria-hidden="true">
+                              <i class="fa-regular fa-image"></i>
+                          </span>`
+                  }
+
+                  ${
+                      product.qunatity === 0
+                      ? `<span class="badge badge--out">Out of Stock</span>`
+                      : product.qunatity <= 10
+                      ? `<span class="badge badge--low">Low Stock</span>`
+                      : `<span class="badge badge--in">In Stock</span>`
+                  }
+
+              </div>
+
+              <div class="product-body">
+
+                  <p class="product-category">
+                      ${product.category}
+                  </p>
+
+                  <h3 class="product-name">
+                      ${product.product_name}
+                  </h3>
+
+                  <p class="product-stock">
+                      <i class="fa-solid fa-warehouse"
+                          aria-hidden="true"></i>
+                      ${product.qunatity} units available
+                  </p>
+
+                  <div class="product-foot">
+
+                      <p class="product-price">
+                          ₹${product.price_per_unit}
+                      </p>
+
+                      <button
+                          type="button"
+                          class="btn btn--primary btn--block"
+                          ${product.qunatity === 0 ? "disabled" : ""}>
+
+                          <i class="fa-solid fa-cart-plus"
+                              aria-hidden="true"></i>
+                          Add to Cart
+
+                      </button>
+
+                  </div>
+              </div>
+
+        </article>
+         ;
+          
+               })
+
+              
+            }
+            else{
+              product_continer.textContainer=data.msg
+              console.log("proudct is not available")
+              
+            }
+            
+          }
+          catch (error) {
+            console.error("Error:", error);
+            result.textContent = "Something went wrong";
+        }
+      }
+
+    }) {% endcomment %}
+
+
+    // add to cart button script
+     {% comment %} const cartButtons = document.querySelectorAll(".add-cart-btn");
+   
+cartButtons.forEach(button => { {% endcomment %}
+  {% comment %} `/AddCart/?=${encodeURIComponent(productid)}` {% endcomment %}
+    document.querySelectorAll(".add-cart-btn").forEach(button => {
+
+        button.addEventListener("click", async function () {
+
+            const productid = this.dataset.id;
+
+            try {
+                const response = await fetch("/consumerdeshboard/",          
+                    {
+                        method: "POST",
+                        headers: {
+                        "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    product_id: productid
+                })
+              });
+                   
+                if (response.ok) {
+                     window.location.href = "/Cart/";
+            }   else {
+                    console.error("Request failed:", response.status);
+            }
+            }
+            catch (error) {
+                console.error("Error:", error);
+            }
+
+        });
+
+    });
+  </script>
+</body>
+</html>
+

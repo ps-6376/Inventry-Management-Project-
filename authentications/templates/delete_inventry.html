@@ -1,0 +1,469 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delete Inventory · Inventory Management System</title>
+<link rel="stylesheet" href="{% static 'style.css' %}">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+</head>
+<body>
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="sidebar__brand">
+      <span class="brand-mark"><span class="brand-mark__glyph"></span></span>
+      <span class="sidebar__brand-text">Inventory Manager<small>Manager Console</small></span>
+    </div>
+
+    <div class="sidebar__section-label">Menu</div>
+    <ul class="sidebar__nav">
+       <li><a class="sidebar__link" href={% url 'manager' %}> <span class="sidebar__icon icon-grid"></span><span>Dashboard</span></a></li>
+      <li><a class="sidebar__link" href={% url 'add_inventry'%}><span class="sidebar__icon icon-plus"></span><span>Add Inventory</span></a></li>
+      <li><a class="sidebar__link" href={% url 'view_inventry'%}><span class="sidebar__icon fa-solid fa-eye"></span><span>View Inventory</span></a></li>
+      <li><a class="sidebar__link" href={% url 'update_inventry'%}><span class="sidebar__icon fa-solid fa-pen-to-square"></span><span>Update Inventory</span></a></li>
+      <li><a class="sidebar__link" href={% url 'delete_inventry'%}><span class="sidebar__icon fa-solid fa-trash"></span>Delete Inventory</span></a></li>
+    </ul>
+
+    <div class="sidebar__logout">
+      <a class="sidebar__link" href={% url 'login'%}><span class="sidebar__icon icon-logout"></span><span>Logout</span></a>
+    </div>
+  </aside>
+
+  <header class="topbar">
+    <span class="topbar__title">Delete Inventory</span>
+    <div class="topbar__right">
+      <div class="profile-chip">
+        <span class="profile-chip__text">
+          <span class="profile-chip__name" id="username"></span>
+          <span class="profile-chip__role">Manager</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main class="main" style="height: 88vh;">
+    <div class="breadcrumb">Inventory / <span>Delete Inventory</span></div>
+    <div class="page-heading">
+      <div>
+        <h1>Delete inventory items</h1>
+        <p>Removing an item is permanent and cannot be undone.</p>
+      </div>
+    </div>
+
+    <div class="notice notice-danger">
+      Deleted items are removed from the catalogue immediately and will no longer appear in reports or order history.
+    </div>
+
+    <section class="panel">
+      <div class="panel__header">
+        <div>
+          <h2>Select items to delete</h2>
+          <p>Search or browse, then confirm removal</p>
+        </div>
+        <form class="filter-row" >
+            {% csrf_token %}
+          <input type="text" class="text-field" placeholder="Search by Product ID or name" id="product_filter">
+          <button type="button" class="btn btn-primary" onclick="filterbtn(event)" >Filter</button>
+        </form>
+      </div>
+
+      <div class="panel__body">
+        <form class="confirm-list" >
+          <div class="confirm-list" id="form" style="overflow-y: auto; overflow-x: auto;">
+          </div>
+            
+              <div class="form-actions">
+                <span style="margin-right:auto; font-size:12.5px; color:var(--ink-500);">{{count}} item selected</span>
+                 <button type="button" class="btn btn-primary" id="cancelbtn" value="cancel" onclick="cancel_item(event)">Cancel</button>
+                  <button type="button" class="btn btn-success" id="restorebtn" value="restore" onclick="Restore_item(event)">Restore</button>
+                  <button type="button" class="btn btn-danger" id="deletebtn" value="delete" onclick="delete_item(event)">Delete selected item</button>
+              </div>
+        </form>
+    </div>
+    </section>
+  </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    fetch("/delete_inventry_api/", {
+        method: "GET",
+        credentials: "same-origin"
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("Request failed: " + response.status);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log("API response:", data);
+
+        // Display username if you have an element for it
+        const usernameElement = document.getElementById("username");
+        if (usernameElement) {
+            usernameElement.textContent = data.username ?? "";
+        }
+
+        const container = document.getElementById(
+            "form"
+        );
+
+        container.innerHTML = "";
+
+        // Get deleted products from API response
+        const products = data.delete_data ?? [];
+
+        if (products.length === 0) {
+            container.innerHTML = "<p>No deleted products found.</p>";
+            return;
+        }
+
+        products.forEach(product => {
+
+            const row = document.createElement("div");
+            row.className = "confirm-row is-selected";
+
+            row.innerHTML = `
+                <div class="confirm-row__info">
+
+                    <input
+                        type="checkbox"
+                        name="checkbox"
+                        value="${product.product_id ?? ""}"
+                        aria-label="Select ${product.product_name ?? "product"}"
+                        class="product-checkbox"
+                    >
+
+                    <span class="product-thumb"></span>
+
+                    <div class="confirm-row__text">
+                        <span class="product-name">
+                            ${product.product_name ?? ""}
+                        </span>
+
+                        <span class="product-sub cell-id">
+                            ${product.product_id ?? ""}  Accessories
+                            · ${product.qunatity ?? 0} in stock
+                        </span>                      
+                    </div>
+                </div>
+
+                <span class="status-pill">
+                    <span class="status-dot out">
+                        ${product.intial_status ?? ""}
+                    </span>
+                </span>
+            `;
+
+            container.appendChild(row);
+        });
+    })
+    .catch(error => {
+        console.error("Error fetching deleted products:", error);
+
+        document.getElementById("deletedProductsContainer").innerHTML =
+            "<p>Unable to load deleted products. Please try again.</p>";
+    });
+
+});
+
+async function filterbtn(event){
+      console.log("indside filter function")
+      event.preventDefault();
+      const product_filter =document.getElementById("product_filter").value;
+      const csrfToken = document.querySelector(
+            '[name="csrfmiddlewaretoken"]'
+        ).value;
+      try {
+            const response = await fetch("/delete_inventry_api/", {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+
+                body: JSON.stringify({
+                    product_filter: product_filter,
+                })
+            });
+             const data = await response.json();
+             console.log(data);
+             const container = document.getElementById(
+            "form"
+        );
+
+        container.innerHTML = "";
+
+        // Get deleted products from API response
+        const products = data.delete_data ?? [];
+
+        if (products.length === 0) {
+            container.innerHTML = "<p>No deleted products found.</p>";
+            return;
+        }
+
+        products.forEach(product => {
+
+            const row = document.createElement("div");
+            row.className = "confirm-row is-selected";
+
+            row.innerHTML = `
+                <div class="confirm-row__info">
+
+                    <input
+                        type="checkbox"
+                        name="checkbox"
+                        value="${product.product_id ?? ""}"
+                        aria-label="Select ${product.product_name ?? "product"}"
+                        class="product-checkbox"
+                    >
+
+                    <span class="product-thumb"></span>
+
+                    <div class="confirm-row__text">
+                        <span class="product-name">
+                            ${product.product_name ?? ""}
+                        </span>
+
+                        <span class="product-sub cell-id">
+                            ${product.product_id ?? ""}  Accessories
+                            · ${product.qunatity ?? 0} in stock
+                        </span>                      
+                    </div>
+                </div>
+
+                <span class="status-pill">
+                    <span class="status-dot out">
+                        ${product.intial_status ?? ""}
+                    </span>
+                </span>
+            `;
+
+            container.appendChild(row);
+        });
+
+      
+      }
+      catch(error) {
+        console.error("Error fetching deleted products:", error);
+        document.getElementById("form").innerHTML =
+            "<p>Unable to load deleted products. Please try again.</p>";
+    };
+
+
+}
+
+
+async function delete_item(event, product_id){
+    const checkedBoxes = document.querySelectorAll(
+        ".product-checkbox:checked"
+    );
+    // Collect product IDs
+    const product_ids = Array.from(checkedBoxes).map(
+        checkbox => checkbox.value
+    );
+    const deletebtn= document.getElementById("deletebtn").value;
+
+   
+   
+   const csrfToken = document.querySelector(
+            '[name="csrfmiddlewaretoken"]'
+        ).value;
+   event.preventDefault();
+    try {
+            const response = await fetch("/delete_inventry_api/", {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({
+                     deletebtn:deletebtn,
+                     product_ids :product_ids 
+                })
+            });
+            console.log("Response status:", response.status);
+             const data = await response.json();
+             console.log(data)
+              const container = document.getElementById(
+            "form"
+        );
+
+        container.innerHTML = "";
+
+        // Get deleted products from API response
+        const products = data.delete_data ?? [];
+
+        if (products.length === 0) {
+            container.innerHTML = "<p>No deleted products found.</p>";
+            return;
+        }
+
+        products.forEach(product => {
+
+            const row = document.createElement("div");
+            row.className = "confirm-row is-selected";
+
+            row.innerHTML = `
+                <div class="confirm-row__info">
+
+                    <input
+                        type="checkbox"
+                        name="checkbox"
+                        value="${product.product_id ?? ""}"
+                        aria-label="Select ${product.product_name ?? "product"}"
+                        class="product-checkbox"
+                    >
+
+                    <span class="product-thumb"></span>
+
+                    <div class="confirm-row__text">
+                        <span class="product-name">
+                            ${product.product_name ?? ""}
+                        </span>
+
+                        <span class="product-sub cell-id">
+                            ${product.product_id ?? ""}  Accessories
+                            · ${product.qunatity ?? 0} in stock
+                        </span>                      
+                    </div>
+                </div>
+
+                <span class="status-pill">
+                    <span class="status-dot out">
+                        ${product.intial_status ?? ""}
+                    </span>
+                </span>
+            `;
+
+            container.appendChild(row);
+        });
+
+      
+      }
+      catch(error) {
+        console.error("Error fetching deleted products:", error);
+        document.getElementById("form").innerHTML =
+            "<p>Unable to load deleted products. Please try again.</p>";
+    };
+}
+function cancel_item(event) {
+    event.preventDefault(); 
+
+    const checkedBoxes = document.querySelectorAll(
+        ".product-checkbox:checked"
+    );
+
+    checkedBoxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+}
+
+{% comment %} restore function {% endcomment %}
+async function Restore_item(event){
+    const checkedBoxes = document.querySelectorAll(
+        ".product-checkbox:checked"
+    );
+    // Collect product IDs
+    const product_ids = Array.from(checkedBoxes).map(
+        checkbox => checkbox.value
+    );
+    const restorebtn= document.getElementById("restorebtn").value;
+
+   
+   
+   const csrfToken = document.querySelector(
+            '[name="csrfmiddlewaretoken"]'
+        ).value;
+   event.preventDefault();
+    try {
+            const response = await fetch("/delete_inventry_api/", {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({
+                     restorebtn:restorebtn,
+                     product_ids :product_ids 
+                })
+            });
+            console.log("Response status:", response.status);
+             const data = await response.json();
+             console.log(data)
+              const container = document.getElementById(
+            "form"
+        );
+
+        container.innerHTML = "";
+
+        // Get deleted products from API response
+        const products = data.delete_data ?? [];
+
+        if (products.length === 0) {
+            container.innerHTML = "<p>No deleted products found.</p>";
+            return;
+        }
+
+        products.forEach(product => {
+
+            const row = document.createElement("div");
+            row.className = "confirm-row is-selected";
+
+            row.innerHTML = `
+                <div class="confirm-row__info">
+
+                    <input
+                        type="checkbox"
+                        name="checkbox"
+                        value="${product.product_id ?? ""}"
+                        aria-label="Select ${product.product_name ?? "product"}"
+                        class="product-checkbox"
+                    >
+
+                    <span class="product-thumb"></span>
+
+                    <div class="confirm-row__text">
+                        <span class="product-name">
+                            ${product.product_name ?? ""}
+                        </span>
+
+                        <span class="product-sub cell-id">
+                            ${product.product_id ?? ""}  Accessories
+                            · ${product.qunatity ?? 0} in stock
+                        </span>                      
+                    </div>
+                </div>
+
+                <span class="status-pill">
+                    <span class="status-dot out">
+                        ${product.intial_status ?? ""}
+                    </span>
+                </span>
+            `;
+
+            container.appendChild(row);
+        });
+
+      
+      }
+      catch(error) {
+        console.error("Error fetching deleted products:", error);
+        document.getElementById("form").innerHTML =
+            "<p>Unable to load deleted products. Please try again.</p>";
+    };
+}
+
+</script>
+</body>
+</html>
